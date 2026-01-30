@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🖥️ Next.js Ping Terminal Monitor
 
-## Getting Started
+A simple **terminal-style ping monitor** built with **Next.js App Router**, inspired by **Windows PowerShell ping output**.  
+This app checks **1 IP address only** and displays the result in a **real-time terminal-like UI**.
 
-First, run the development server:
+---
 
+## ✨ Features
+
+- ✅ Real ICMP ping (server-side)
+- 🖤 Terminal / PowerShell style UI
+- ⏱ Auto ping every 1 second
+- 📡 Shows latency (`time=<1ms`)
+- 🧾 Output scrolls like real terminal
+- ⚡ Lightweight & simple
+
+---
+
+## 🛠 Tech Stack
+
+- **Next.js (App Router)**
+- **TypeScript**
+- **Tailwind CSS**
+- **ping (npm library)**
+
+---
+
+## 📂 Project Structure
+src/
+└─ app/
+├─ api/
+│ └─ ping-once/
+│ └─ route.ts
+├─ ping-terminal/
+│ └─ page.tsx
+└─ page.tsx
+
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone Repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone https://github.com/USERNAME/REPO_NAME.git
+cd REPO_NAME
+
+2️⃣ Install Dependencies
+pnpm install
+
+3️⃣ Run Development Server
 pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open in browser:
+http://localhost:3000/ping-terminal
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+⚙️ Configuration
 
-## Learn More
+Edit target IP in:
 
-To learn more about Next.js, take a look at the following resources:
+src/app/ping-terminal/page.tsx
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+const IP = "192.168.234.100";
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+.
 
-## Deploy on Vercel
+🖥 UI Preview
+Microsoft Windows [Version 10.0.xxxxx]
+(c) Microsoft Corporation. All rights reserved.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+PS C:\Users\admin> ping 192.168.234.100 -t
+Reply from 192.168.234.100: bytes=32 time<1ms TTL=125
+Reply from 192.168.234.100: bytes=32 time<1ms TTL=125
+Reply from 192.168.234.100: bytes=32 time<1ms TTL=125
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+⚠️ Important Notes
+
+❌ ICMP ping will NOT work on Vercel
+
+✅ Recommended environments:
+
+VPS
+
+On-Premise Server
+
+Docker / VM
+
+Linux works out of the box
+
+Windows server may require ICMP permission
+
+
