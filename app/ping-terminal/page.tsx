@@ -2,71 +2,100 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const IP = "10.87.1.400";
+const IP = "10.87.1.64";
+const PORT = 3389;
+const MAX_PING = 5;
+
+type PingResult = {
+  alive: boolean;
+  time: number | null;
+  line: string;
+};
 
 export default function PingTerminal() {
   const [lines, setLines] = useState<string[]>([]);
-  const [isOnline, setIsOnline] = useState<boolean | null>(null);
+  const [count, setCount] = useState(0);
+  const [times, setTimes] = useState<number[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // --- PING 5x ---
   useEffect(() => {
-    const interval = setInterval(async () => {
+    if (count >= MAX_PING) return;
+
+    const timer = setTimeout(async () => {
       const res = await fetch(`/api/ping-once?ip=${IP}`);
-      const data = await res.json();
+      const data: PingResult = await res.json();
 
-      const line: string = data.line ?? "";
+      setLines((prev) => [...prev, data.line]);
+      setCount((c) => c + 1);
 
-      setLines((prev) => [
-        ...prev,
-        line,
-      ]);
-
-      // Simple heuristics to detect online/offline from ping output
-      const successPattern = /time=|ttl=|bytes=/i;
-      const failurePattern = /request timed out|destination host unreachable|could not find host|no route to host|timed out/i;
-
-      if (successPattern.test(line)) {
-        setIsOnline(true);
-      } else if (failurePattern.test(line)) {
-        setIsOnline(false);
+      if (data.alive && data.time !== null) {
+        setTimes((t) => (data.time !== null ? [...t, data.time] : t));
       }
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [count]);
+
+  // --- STATISTIK + PORT CHECK ---
+  useEffect(() => {
+    if (count !== MAX_PING) return;
+
+    const sent = MAX_PING;
+    const received = times.length;
+    const lost = sent - received;
+    const lossPercent = Math.round((lost / sent) * 100);
+
+    const min = Math.min(...times);
+    const max = Math.max(...times);
+    const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+
+    (async () => {
+      const res = await fetch(
+        `/api/port-check?host=${IP}&port=${PORT}`
+      );
+      const portData = await res.json();
+
+      setLines((prev) => [
+        ...prev,
+        "",
+        "",
+        `Ping statistics for ${IP}:`,
+        "",
+        `    Packets: Sent = ${sent}, Received = ${received}, Lost = ${lost} (${lossPercent}% loss),`,
+        "",
+        `Approximate round trip times in milli-seconds:`,
+        `    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms`,
+        "",
+        "",
+        `PS C:\\Users\\admin> Test-NetConnection ${IP} -Port ${PORT}`,
+        "",
+        `ComputerName     : ${IP}`,
+        `RemotePort       : ${PORT}`,
+        `TcpTestSucceeded : ${portData.open ? "True" : "False"}`,
+        "",
+        "Control-C",
+      ]);
+    })();
+  }, [count]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [lines]);
 
   return (
-    <div className="min-h-screen bg-black text-gray-200 font-mono p-6">
-      <div className="text-sm mb-2">
-        Smart Mining System [Version 0.1] / IMIP APPDEV
-      </div>
-      <div className="text-sm mb-4">
-        (c) Microsoft Corporation. All rights reserved.
-      </div>
+    <div className="min-h-screen bg-black text-gray-200 font-mono p-6 text-sm">
+      <div>Microsoft Windows [Version 10.0.19045.4046]</div>
+      <div>(c) Microsoft Corporation. All rights reserved.</div>
+      <br />
+      <div>PS C:\Users\admin&gt; ping {IP}</div>
+      <br />
 
-      <div className="flex items-center text-sm mb-2">
-        <span
-          className={`inline-block w-3 h-3 rounded-full mr-2 ${
-            isOnline === null ? "bg-gray-500" : isOnline ? "bg-green-500" : "bg-red-500"
-          }`}
-        />
-        <span className="mr-4">{isOnline === null ? "Checking..." : isOnline ? "Online" : "Offline"}</span>
-      </div>
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
 
-      <div className="text-sm mb-2">
-        PS C:\Users\admin&gt; ping {IP} -t
-      </div>
-
-      <div className="space-y-1 text-sm">
-        {lines.map((line, i) => (
-          <div key={i}>{line}</div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+      <div ref={bottomRef} />
     </div>
   );
 }

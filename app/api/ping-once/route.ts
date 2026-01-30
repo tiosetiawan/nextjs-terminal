@@ -12,13 +12,15 @@ export async function GET(req: Request) {
 
   if (!res.alive) {
     return Response.json({
-      line: `Request timed out.`,
       alive: false,
+      time: null,
+      line: "Request timed out.",
     });
   }
 
   return Response.json({
     alive: true,
+    time: Number(res.time),
     line: `Reply from ${ip}: bytes=32 time=${res.time}ms TTL=125`,
   });
 }
